@@ -137,7 +137,7 @@ var certificateCmd = APIEndpoint{
 //	  "500":
 //	    $ref: "#/responses/InternalServerError"
 func certificatesGet(d *Daemon, r *http.Request) response.Response {
-	recursion := util.IsRecursionRequest(r)
+	recursion, _ := util.IsRecursionRequest(r)
 	s := d.State()
 
 	userHasPermission, err := s.Authorizer.GetPermissionChecker(r.Context(), auth.EntitlementCanView, entity.TypeCertificate)
@@ -165,7 +165,7 @@ func certificatesGet(d *Daemon, r *http.Request) response.Response {
 				continue
 			}
 
-			if recursion {
+			if recursion > 0 {
 				apiCert, err := baseCert.ToAPI(ctx, tx.Tx())
 				if err != nil {
 					return err
@@ -182,7 +182,7 @@ func certificatesGet(d *Daemon, r *http.Request) response.Response {
 		return response.SmartError(err)
 	}
 
-	if !recursion {
+	if recursion == 0 {
 		body := []string{}
 		for _, baseCert := range baseCerts {
 			certificateURL := api.NewURL().Path(version.APIVersion, "certificates", baseCert.Fingerprint).String()

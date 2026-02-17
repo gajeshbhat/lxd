@@ -122,7 +122,8 @@ func devLXDStoragePoolVolumesGetHandler(d *Daemon, r *http.Request) response.Res
 	}
 
 	// Reject non-recursive requests.
-	if !util.IsRecursionRequest(r) {
+	recursion, _ := util.IsRecursionRequest(r)
+	if recursion == 0 {
 		return response.DevLXDErrorResponse(api.NewStatusError(http.StatusNotImplemented, "Only recursive requests are currently supported"))
 	}
 
@@ -549,7 +550,8 @@ func devLXDStoragePoolVolumeSnapshotsGetHandler(d *Daemon, r *http.Request) resp
 	}
 
 	// Non-recursive requests are currently not supported.
-	if !util.IsRecursionRequest(r) {
+	recursion, _ := util.IsRecursionRequest(r)
+	if recursion == 0 {
 		return response.DevLXDErrorResponse(api.NewStatusError(http.StatusNotImplemented, "Only recursive requests are currently supported"))
 	}
 

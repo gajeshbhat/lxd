@@ -194,7 +194,7 @@ func storagePoolVolumeTypeCustomBackupsGet(d *Daemon, r *http.Request) response.
 		return resp
 	}
 
-	recursion := util.IsRecursionRequest(r)
+	recursion, _ := util.IsRecursionRequest(r)
 
 	var volumeBackups []db.StoragePoolVolumeBackup
 
@@ -231,7 +231,7 @@ func storagePoolVolumeTypeCustomBackupsGet(d *Daemon, r *http.Request) response.
 			continue
 		}
 
-		if !recursion {
+		if recursion == 0 {
 			url := api.NewURL().Path(version.APIVersion, "storage-pools", details.pool.Name(), "volumes", "custom", details.volumeName, "backups", backupName).String()
 			resultString = append(resultString, url)
 		} else {
@@ -240,7 +240,7 @@ func storagePoolVolumeTypeCustomBackupsGet(d *Daemon, r *http.Request) response.
 		}
 	}
 
-	if !recursion {
+	if recursion == 0 {
 		return response.SyncResponse(true, resultString)
 	}
 
