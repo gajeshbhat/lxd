@@ -22,6 +22,7 @@ import (
 	"github.com/canonical/lxd/lxd/instance/instancetype"
 	"github.com/canonical/lxd/lxd/request"
 	"github.com/canonical/lxd/lxd/response"
+	"github.com/canonical/lxd/lxd/util"
 	"github.com/canonical/lxd/shared"
 	"github.com/canonical/lxd/shared/api"
 	"github.com/canonical/lxd/shared/entity"
@@ -239,12 +240,9 @@ func instancesGet(d *Daemon, r *http.Request) response.Response {
 		return response.BadRequest(err)
 	}
 
-	recursionStr := r.FormValue("recursion")
+	recursion, fields := util.IsRecursionRequest(r)
 
-	// Get fields parameter (can have multiple values)
-	fields := r.URL.Query()["fields"]
-
-	recursion, stateOpts, err := instance.ParseRecursionFields(recursionStr, fields)
+	stateOpts, err := instance.ParseRecursionFields(fields)
 	if err != nil {
 		return response.BadRequest(err)
 	}
@@ -563,7 +561,10 @@ func doContainersGetFromNode(projects []string, node string, allProjects bool, n
 
 		var containers []api.Instance
 		if allProjects {
-			containers, err = client.GetInstancesAllProjects(api.InstanceType(instanceType.String()))
+			containers, err = client.GetInstances(lxd.GetInstancesArgs{
+				InstanceType: api.InstanceType(instanceType.String()),
+				AllProjects:  true,
+			})
 			if err != nil {
 				return nil, fmt.Errorf("Failed to get instances from member %s: %w", node, err)
 			}
@@ -571,7 +572,9 @@ func doContainersGetFromNode(projects []string, node string, allProjects bool, n
 			for _, project := range projects {
 				client = client.UseProject(project)
 
-				tmpContainers, err := client.GetInstances(api.InstanceType(instanceType.String()))
+				tmpContainers, err := client.GetInstances(lxd.GetInstancesArgs{
+					InstanceType: api.InstanceType(instanceType.String()),
+				})
 				if err != nil {
 					return nil, fmt.Errorf("Failed to get instances from member %s: %w", node, err)
 				}
